@@ -72,12 +72,17 @@ class _CameraViewState extends State<CameraView> {
     return Container(
       color: Colors.black,
       child: Stack(
-        fit: StackFit.expand,
+        alignment: Alignment.center,
         children: <Widget>[
-          Center(
-            child: CameraPreview(
-              _controller!,
-              child: widget.customPaint,
+          CameraPreview(
+            _controller!,
+            child: widget.customPaint,
+          ),
+          Container(
+            width: 200.0,
+            height: 80.0,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.amber),
             ),
           ),
         ],

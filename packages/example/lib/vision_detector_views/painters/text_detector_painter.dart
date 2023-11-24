@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:ui';
 import 'dart:ui' as ui;
 
@@ -21,6 +20,31 @@ class TextRecognizerPainter extends CustomPainter {
   final InputImageRotation rotation;
   final CameraLensDirection cameraLensDirection;
 
+  /// [TextBlock]の四隅のポイントの座標が指定の範囲内にあるかどうか判定する。
+  bool hasPointInRange(TextBlock textBlock) {
+    print('textBlock.cornerPoints.length: ${textBlock.cornerPoints.length}');
+    // 長方形の全て角の座標が正確に取得できていない場合は処理を中断する。
+    if (textBlock.cornerPoints.length != 4) {
+      return false;
+    }
+    for (final point in textBlock.cornerPoints) {
+      print('point.x: ${point.x}, point.y: ${point.y}');
+      // ポイントのX座標が指定範囲内に収まっているかどうか確認する。
+      const double minX = 175;
+      const double maxX = 575;
+      if (point.x < minX || point.x > maxX) {
+        return false;
+      }
+      // ポイントのY座標が指定範囲内に収まっているかどうか確認する。
+      const double minY = 567;
+      const double maxY = 767;
+      if (point.y < minY || point.y > maxY) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final Paint paint = Paint()
@@ -31,6 +55,12 @@ class TextRecognizerPainter extends CustomPainter {
     final Paint background = Paint()..color = Color(0x99000000);
 
     for (final textBlock in recognizedText.blocks) {
+      print('hasPointInRange: ${hasPointInRange(textBlock)}');
+      print('textBlock.text: ${textBlock.text}');
+      if (!hasPointInRange(textBlock)) {
+        continue;
+      }
+
       final ParagraphBuilder builder = ParagraphBuilder(
         ParagraphStyle(
             textAlign: TextAlign.left,
@@ -63,99 +93,23 @@ class TextRecognizerPainter extends CustomPainter {
         rotation,
         cameraLensDirection,
       );
-      // final bottom = translateY(
-      //   textBlock.boundingBox.bottom,
-      //   size,
-      //   imageSize,
-      //   rotation,
-      //   cameraLensDirection,
-      // );
-      //
-      // canvas.drawRect(
-      //   Rect.fromLTRB(left, top, right, bottom),
-      //   paint,
-      // );
 
       final List<Offset> cornerPoints = <Offset>[];
       for (final point in textBlock.cornerPoints) {
-        double x = translateX(
+        final double x = translateX(
           point.x.toDouble(),
           size,
           imageSize,
           rotation,
           cameraLensDirection,
         );
-        double y = translateY(
+        final double y = translateY(
           point.y.toDouble(),
           size,
           imageSize,
           rotation,
           cameraLensDirection,
         );
-
-        if (Platform.isAndroid) {
-          switch (cameraLensDirection) {
-            case CameraLensDirection.front:
-              switch (rotation) {
-                case InputImageRotation.rotation0deg:
-                case InputImageRotation.rotation90deg:
-                  break;
-                case InputImageRotation.rotation180deg:
-                  x = size.width - x;
-                  y = size.height - y;
-                  break;
-                case InputImageRotation.rotation270deg:
-                  x = translateX(
-                    point.y.toDouble(),
-                    size,
-                    imageSize,
-                    rotation,
-                    cameraLensDirection,
-                  );
-                  y = size.height -
-                      translateY(
-                        point.x.toDouble(),
-                        size,
-                        imageSize,
-                        rotation,
-                        cameraLensDirection,
-                      );
-                  break;
-              }
-              break;
-            case CameraLensDirection.back:
-              switch (rotation) {
-                case InputImageRotation.rotation0deg:
-                case InputImageRotation.rotation270deg:
-                  break;
-                case InputImageRotation.rotation180deg:
-                  x = size.width - x;
-                  y = size.height - y;
-                  break;
-                case InputImageRotation.rotation90deg:
-                  x = size.width -
-                      translateX(
-                        point.y.toDouble(),
-                        size,
-                        imageSize,
-                        rotation,
-                        cameraLensDirection,
-                      );
-                  y = translateY(
-                    point.x.toDouble(),
-                    size,
-                    imageSize,
-                    rotation,
-                    cameraLensDirection,
-                  );
-                  break;
-              }
-              break;
-            case CameraLensDirection.external:
-              break;
-          }
-        }
-
         cornerPoints.add(Offset(x, y));
       }
 
@@ -168,12 +122,7 @@ class TextRecognizerPainter extends CustomPainter {
           ..layout(ParagraphConstraints(
             width: (right - left).abs(),
           )),
-        Offset(
-            Platform.isAndroid &&
-                    cameraLensDirection == CameraLensDirection.front
-                ? right
-                : left,
-            top),
+        Offset(left, top),
       );
     }
   }
