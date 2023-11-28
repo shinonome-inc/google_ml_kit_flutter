@@ -2,19 +2,18 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
 
 class CameraView extends StatefulWidget {
-  CameraView(
-      {Key? key,
-      required this.customPaint,
-      required this.onImage,
-      this.onCameraFeedReady,
-      this.onDetectorViewModeChanged,
-      this.onCameraLensDirectionChanged,
-      this.initialCameraLensDirection = CameraLensDirection.back})
-      : super(key: key);
+  CameraView({
+    Key? key,
+    required this.customPaint,
+    required this.onImage,
+    this.onCameraFeedReady,
+    this.onDetectorViewModeChanged,
+    this.onCameraLensDirectionChanged,
+    this.initialCameraLensDirection = CameraLensDirection.back,
+  }) : super(key: key);
 
   final CustomPaint? customPaint;
   final Function(InputImage inputImage) onImage;
@@ -82,7 +81,10 @@ class _CameraViewState extends State<CameraView> {
             width: 200.0,
             height: 80.0,
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.amber),
+              border: Border.all(
+                color: Colors.amber,
+                width: 4.0,
+              ),
             ),
           ),
         ],
@@ -97,9 +99,7 @@ class _CameraViewState extends State<CameraView> {
       // Set to ResolutionPreset.high. Do NOT set it to ResolutionPreset.max because for some phones does NOT work.
       ResolutionPreset.high,
       enableAudio: false,
-      imageFormatGroup: Platform.isAndroid
-          ? ImageFormatGroup.nv21
-          : ImageFormatGroup.bgra8888,
+      imageFormatGroup: ImageFormatGroup.bgra8888,
     );
     _controller?.initialize().then((_) {
       if (!mounted) {
@@ -129,18 +129,10 @@ class _CameraViewState extends State<CameraView> {
     widget.onImage(inputImage);
   }
 
-  final _orientations = {
-    DeviceOrientation.portraitUp: 0,
-    DeviceOrientation.landscapeLeft: 90,
-    DeviceOrientation.portraitDown: 180,
-    DeviceOrientation.landscapeRight: 270,
-  };
-
   InputImage? _inputImageFromCameraImage(CameraImage image) {
     if (_controller == null) return null;
 
     // get image rotation
-    // it is used in android to convert the InputImage from Dart to Java: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/android/src/main/java/com/google_mlkit_commons/InputImageConverter.java
     // `rotation` is not used in iOS to convert the InputImage from Dart to Obj-C: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/ios/Classes/MLKVisionImage%2BFlutterPlugin.m
     // in both platforms `rotation` and `camera.lensDirection` can be used to compensate `x` and `y` coordinates on a canvas: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/example/lib/vision_detector_views/painters/coordinates_translator.dart
     final camera = _cameras[_cameraIndex];
@@ -148,23 +140,8 @@ class _CameraViewState extends State<CameraView> {
     // print(
     //     'lensDirection: ${camera.lensDirection}, sensorOrientation: $sensorOrientation, ${_controller?.value.deviceOrientation} ${_controller?.value.lockedCaptureOrientation} ${_controller?.value.isCaptureOrientationLocked}');
     InputImageRotation? rotation;
-    if (Platform.isIOS) {
-      rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
-    } else if (Platform.isAndroid) {
-      var rotationCompensation =
-          _orientations[_controller!.value.deviceOrientation];
-      if (rotationCompensation == null) return null;
-      if (camera.lensDirection == CameraLensDirection.front) {
-        // front-facing
-        rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
-      } else {
-        // back-facing
-        rotationCompensation =
-            (sensorOrientation - rotationCompensation + 360) % 360;
-      }
-      rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
-      // print('rotationCompensation: $rotationCompensation');
-    }
+    rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
+
     if (rotation == null) return null;
     // print('final rotation: $rotation');
 
@@ -175,7 +152,6 @@ class _CameraViewState extends State<CameraView> {
     // * nv21 for Android
     // * bgra8888 for iOS
     if (format == null ||
-        (Platform.isAndroid && format != InputImageFormat.nv21) ||
         (Platform.isIOS && format != InputImageFormat.bgra8888)) return null;
 
     // since format is constraint to nv21 or bgra8888, both only have one plane
