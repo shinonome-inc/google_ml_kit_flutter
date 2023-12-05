@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
@@ -8,10 +10,24 @@ import 'painters/text_detector_painter.dart';
 class TextRecognizerView extends StatefulWidget {
   const TextRecognizerView({
     Key? key,
+    this.focusedAreaWidth = 200.0,
+    this.focusedAreaHeight = 40.0,
+    this.focusedAreaRadius = const Radius.circular(8.0),
+    this.focusedAreaPaint,
+    this.unfocusedAreaPaint,
+    this.textBackgroundPaint,
+    this.paintTextStyle,
     required this.onScanText,
   }) : super(key: key);
 
-  final Function onScanText;
+  final double? focusedAreaWidth;
+  final double? focusedAreaHeight;
+  final Radius? focusedAreaRadius;
+  final Paint? focusedAreaPaint;
+  final Paint? unfocusedAreaPaint;
+  final Paint? textBackgroundPaint;
+  final ui.TextStyle? paintTextStyle;
+  final Function? onScanText;
 
   @override
   State<TextRecognizerView> createState() => _TextRecognizerViewState();
@@ -110,8 +126,13 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
         imageSize: inputImage.metadata!.size,
         rotation: inputImage.metadata!.rotation,
         cameraLensDirection: _cameraLensDirection,
-        focusAreaWidth: 200,
-        focusAreaHeight: 40,
+        focusedAreaWidth: widget.focusedAreaWidth!,
+        focusedAreaHeight: widget.focusedAreaHeight!,
+        focusedAreaRadius: widget.focusedAreaRadius!,
+        focusedAreaPaint: widget.focusedAreaPaint,
+        unfocusedAreaPaint: widget.unfocusedAreaPaint,
+        textBackgroundPaint: widget.textBackgroundPaint,
+        paintTextStyle: widget.paintTextStyle,
         onScanText: widget.onScanText,
       );
       _customPaint = CustomPaint(painter: painter);

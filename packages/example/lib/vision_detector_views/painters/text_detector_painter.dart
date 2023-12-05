@@ -13,99 +13,98 @@ class TextRecognizerPainter extends CustomPainter {
     required this.imageSize,
     required this.rotation,
     required this.cameraLensDirection,
-    required this.focusAreaWidth,
-    required this.focusAreaHeight,
-    required this.onScanText,
+    required this.focusedAreaWidth,
+    required this.focusedAreaHeight,
+    required this.focusedAreaRadius,
+    this.focusedAreaPaint,
+    this.unfocusedAreaPaint,
+    this.textBackgroundPaint,
+    this.paintTextStyle,
+    this.onScanText,
   });
 
   final RecognizedText recognizedText;
   final Size imageSize;
   final InputImageRotation rotation;
   final CameraLensDirection cameraLensDirection;
-  final double focusAreaWidth;
-  final double focusAreaHeight;
-  final Function onScanText;
+  final double focusedAreaWidth;
+  final double focusedAreaHeight;
+  final Radius focusedAreaRadius;
+  final Paint? focusedAreaPaint;
+  final Paint? unfocusedAreaPaint;
+  final Paint? textBackgroundPaint;
+  final ui.TextStyle? paintTextStyle;
+  final Function? onScanText;
 
-  bool hasPointInRange(RRect focusRRect, Rect textRect) {
+  bool hasPointInRange(RRect focusedRRect, Rect textRect) {
     // ポイントのX座標が指定範囲内に収まっているかどうか確認する。
-    final double minX = focusRRect.left;
-    final double maxX = focusRRect.right;
+    final double minX = focusedRRect.left;
+    final double maxX = focusedRRect.right;
     if (textRect.left < minX || textRect.right > maxX) {
       return false;
     }
     // ポイントのY座標が指定範囲内に収まっているかどうか確認する。
-    final double minY = focusRRect.top;
-    final double maxY = focusRRect.bottom;
+    final double minY = focusedRRect.top;
+    final double maxY = focusedRRect.bottom;
     if (textRect.top < minY || textRect.bottom > maxY) {
       return false;
     }
     return true;
   }
 
-  /// Fill camera margin with transparent black
-  void _fillCameraMargin(Canvas canvas, Size size, RRect focusRRect) {
-    // if (cameraMarginColor == null) {
-    //   return;
-    // }
-    final Size deviceSize = Size(size.width, size.height * 3);
+  /// Draw focused area
+  void _drawFocusedArea(Canvas canvas, RRect focusedRRect) {
+    canvas.drawRRect(
+      focusedRRect,
+      focusedAreaPaint ?? Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0
+        ..color = Colors.blue,
+    );
+  }
+
+  /// draw unfocused area
+  void _drawUnfocusedArea(Canvas canvas, Size size, RRect focusedRRect) {
+    final Size deviceSize = Size(size.width, size.height);
     final Rect deviceRect = Rect.fromCenter(
       center: Offset(deviceSize.width / 2, deviceSize.height / 2),
       width: deviceSize.width,
       height: deviceSize.height,
     );
-    final paint = Paint()..color = Color(0x99000000);
     canvas.drawPath(
       Path.combine(
         PathOperation.difference,
         Path()..addRect(deviceRect),
-        Path()..addRRect(focusRRect),
+        Path()..addRRect(focusedRRect),
       ),
-      paint,
+      unfocusedAreaPaint ?? Paint()
+        ..color = Color(0x99000000),
     );
   }
 
-  /// Draw Focus area
-  void _drawFocusArea(Canvas canvas, RRect focusRRect) {
-    final Paint paintbox = (Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..color = const Color.fromARGB(153, 102, 160, 241));
-    canvas.drawRRect(
-      focusRRect,
-      paintbox,
-    );
-  }
-
-  void _drawText(
-    Canvas canvas,
-    TextBlock textBlock,
-    double left,
-    double right,
-    double top,
-  ) {
-    final Paint background = Paint()..color = Color(0x99000000);
+  void _drawText(Canvas canvas, TextBlock textBlock, Rect textRect) {
     final ParagraphBuilder builder = ParagraphBuilder(
-      ParagraphStyle(
-        textAlign: TextAlign.left,
-        fontSize: 16,
-        textDirection: TextDirection.ltr,
-      ),
+      ParagraphStyle(),
     );
     builder.pushStyle(
-      ui.TextStyle(color: Colors.lightGreenAccent, background: background),
+      paintTextStyle ??
+          ui.TextStyle(
+            color: Colors.lightGreenAccent,
+            background: Paint()..color = Color(0x99000000),
+          ),
     );
     builder.addText(textBlock.text);
     builder.pop();
     canvas.drawParagraph(
       builder.build()
         ..layout(
-          ParagraphConstraints(width: (right - left).abs()),
+          ParagraphConstraints(width: (textRect.right - textRect.left).abs()),
         ),
-      Offset(left, top),
+      Offset(textRect.left, textRect.top),
     );
   }
 
-  void _drawCorner(Canvas canvas, TextBlock textBlock, Size size, Paint paint) {
+  void _drawTextBackground(Canvas canvas, TextBlock textBlock, Size size) {
     final List<Offset> cornerPoints = <Offset>[];
     for (final point in textBlock.cornerPoints) {
       final double x = translateX(
@@ -125,26 +124,28 @@ class TextRecognizerPainter extends CustomPainter {
       cornerPoints.add(Offset(x, y));
     }
     cornerPoints.add(cornerPoints.first);
-    canvas.drawPoints(PointMode.polygon, cornerPoints, paint);
+    canvas.drawPoints(
+      PointMode.polygon,
+      cornerPoints,
+      textBackgroundPaint ?? Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0
+        ..color = Colors.lightGreenAccent,
+    );
   }
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0
-      ..color = Colors.lightGreenAccent;
-
-    final RRect focusRRect = RRect.fromLTRBR(
-      (size.width - focusAreaWidth) / 2,
-      (size.height - focusAreaHeight) / 2,
-      (size.width - focusAreaWidth) / 2 + focusAreaWidth,
-      (size.height - focusAreaHeight) / 2 + focusAreaHeight,
-      Radius.circular(8.0),
+    final RRect focusedRRect = RRect.fromLTRBR(
+      (size.width - focusedAreaWidth) / 2,
+      (size.height - focusedAreaHeight) / 2,
+      (size.width - focusedAreaWidth) / 2 + focusedAreaWidth,
+      (size.height - focusedAreaHeight) / 2 + focusedAreaHeight,
+      focusedAreaRadius,
     );
 
-    _fillCameraMargin(canvas, size, focusRRect);
-    _drawFocusArea(canvas, focusRRect);
+    _drawUnfocusedArea(canvas, size, focusedRRect);
+    _drawFocusedArea(canvas, focusedRRect);
 
     for (final textBlock in recognizedText.blocks) {
       final double textLeft = translateX(
@@ -177,14 +178,13 @@ class TextRecognizerPainter extends CustomPainter {
       );
       final Rect textRect =
           Rect.fromLTRB(textLeft, textTop, textRight, textBottom);
-      print(
-          'textLeft: $textLeft, textTop: $textTop, textRight: $textRight, textBottom: $textBottom');
-      print('textBlock.text: ${textBlock.text}');
 
-      if (hasPointInRange(focusRRect, textRect)) {
-        _drawText(canvas, textBlock, textLeft, textRight, textTop);
-        _drawCorner(canvas, textBlock, size, paint);
-        onScanText(textBlock.text);
+      if (hasPointInRange(focusedRRect, textRect)) {
+        _drawTextBackground(canvas, textBlock, size);
+        _drawText(canvas, textBlock, textRect);
+        if (onScanText != null) {
+          onScanText!(textBlock.text);
+        }
       }
     }
   }
