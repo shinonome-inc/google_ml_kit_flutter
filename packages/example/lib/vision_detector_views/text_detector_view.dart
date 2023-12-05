@@ -6,6 +6,13 @@ import 'detector_view.dart';
 import 'painters/text_detector_painter.dart';
 
 class TextRecognizerView extends StatefulWidget {
+  const TextRecognizerView({
+    Key? key,
+    required this.onScanText,
+  }) : super(key: key);
+
+  final Function onScanText;
+
   @override
   State<TextRecognizerView> createState() => _TextRecognizerViewState();
 }
@@ -105,6 +112,7 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
         cameraLensDirection: _cameraLensDirection,
         focusAreaWidth: 200,
         focusAreaHeight: 40,
+        onScanText: widget.onScanText,
       );
       _customPaint = CustomPaint(painter: painter);
     } else {

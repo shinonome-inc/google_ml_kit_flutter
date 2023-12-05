@@ -15,6 +15,7 @@ class TextRecognizerPainter extends CustomPainter {
     required this.cameraLensDirection,
     required this.focusAreaWidth,
     required this.focusAreaHeight,
+    required this.onScanText,
   });
 
   final RecognizedText recognizedText;
@@ -23,6 +24,7 @@ class TextRecognizerPainter extends CustomPainter {
   final CameraLensDirection cameraLensDirection;
   final double focusAreaWidth;
   final double focusAreaHeight;
+  final Function onScanText;
 
   bool hasPointInRange(RRect focusRRect, Rect textRect) {
     // ポイントのX座標が指定範囲内に収まっているかどうか確認する。
@@ -182,6 +184,7 @@ class TextRecognizerPainter extends CustomPainter {
       if (hasPointInRange(focusRRect, textRect)) {
         _drawText(canvas, textBlock, textLeft, textRight, textTop);
         _drawCorner(canvas, textBlock, size, paint);
+        onScanText(textBlock.text);
       }
     }
   }
