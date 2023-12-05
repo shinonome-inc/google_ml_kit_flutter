@@ -65,11 +65,10 @@ class TextRecognizerPainter extends CustomPainter {
 
   /// draw unfocused area
   void _drawUnfocusedArea(Canvas canvas, Size size, RRect focusedRRect) {
-    final Size deviceSize = Size(size.width, size.height);
     final Rect deviceRect = Rect.fromCenter(
-      center: Offset(deviceSize.width / 2, deviceSize.height / 2),
-      width: deviceSize.width,
-      height: deviceSize.height,
+      center: Offset(size.width / 2, size.height / 2),
+      width: size.width,
+      height: size.height,
     );
     canvas.drawPath(
       Path.combine(
