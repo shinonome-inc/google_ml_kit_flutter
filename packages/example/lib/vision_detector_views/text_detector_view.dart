@@ -99,10 +99,12 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     if (inputImage.metadata?.size != null &&
         inputImage.metadata?.rotation != null) {
       final painter = TextRecognizerPainter(
-        recognizedText,
-        inputImage.metadata!.size,
-        inputImage.metadata!.rotation,
-        _cameraLensDirection,
+        recognizedText: recognizedText,
+        imageSize: inputImage.metadata!.size,
+        rotation: inputImage.metadata!.rotation,
+        cameraLensDirection: _cameraLensDirection,
+        focusAreaWidth: 200,
+        focusAreaHeight: 40,
       );
       _customPaint = CustomPaint(painter: painter);
     } else {

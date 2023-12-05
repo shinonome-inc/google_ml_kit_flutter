@@ -68,27 +68,9 @@ class _CameraViewState extends State<CameraView> {
     if (_cameras.isEmpty) return Container();
     if (_controller == null) return Container();
     if (_controller?.value.isInitialized == false) return Container();
-    return Container(
-      color: Colors.black,
-      child: Stack(
-        alignment: Alignment.center,
-        children: <Widget>[
-          CameraPreview(
-            _controller!,
-            child: widget.customPaint,
-          ),
-          Container(
-            width: 200.0,
-            height: 80.0,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.amber,
-                width: 4.0,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return CameraPreview(
+      _controller!,
+      child: widget.customPaint,
     );
   }
 
