@@ -8,8 +8,8 @@ import 'camera_view.dart';
 import 'script_dropdown_button.dart';
 import 'text_detector_painter.dart';
 
-class TextRecognizerView extends StatefulWidget {
-  const TextRecognizerView({
+class FocusedAreaOCRView extends StatefulWidget {
+  const FocusedAreaOCRView({
     Key? key,
     this.focusedAreaWidth = 200.0,
     this.focusedAreaHeight = 40.0,
@@ -35,10 +35,10 @@ class TextRecognizerView extends StatefulWidget {
   final bool showDropdown;
 
   @override
-  State<TextRecognizerView> createState() => _TextRecognizerViewState();
+  State<FocusedAreaOCRView> createState() => _FocusedAreaOCRViewState();
 }
 
-class _TextRecognizerViewState extends State<TextRecognizerView> {
+class _FocusedAreaOCRViewState extends State<FocusedAreaOCRView> {
   late TextRecognitionScript _script;
   late TextRecognizer _textRecognizer;
   bool _canProcess = true;

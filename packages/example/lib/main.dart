@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'text_detector_view.dart';
+import 'focused_area_ocr_view.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       body: Stack(
         children: [
-          TextRecognizerView(
+          FocusedAreaOCRView(
             onScanText: (text) {
               controller.add(text);
             },
