@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'vision_detector_views/text_detector_view.dart';
+import 'text_detector_view.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -15,7 +15,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MyHomePage(),
+      title: 'Focused Area OCR Flutter',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: const MyHomePage(),
     );
   }
 }
@@ -37,9 +42,9 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           TextRecognizerView(
             onScanText: (text) {
-              print(text);
               controller.add(text);
             },
+            showDropdown: false,
           ),
           SafeArea(
             child: StreamBuilder<String>(

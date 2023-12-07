@@ -2,9 +2,10 @@ import 'dart:ui' as ui;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:focused_area_ocr_flutter/camera_view.dart';
-import 'package:focused_area_ocr_flutter/text_detector_painter.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+
+import 'camera_view.dart';
+import 'text_detector_painter.dart';
 
 class TextRecognizerView extends StatefulWidget {
   const TextRecognizerView({
