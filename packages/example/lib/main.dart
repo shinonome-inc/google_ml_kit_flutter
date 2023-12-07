@@ -37,7 +37,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final double statusBarHeight = MediaQuery.of(context).viewPadding.top;
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
           FocusedAreaOCRView(
@@ -45,7 +47,16 @@ class _MyHomePageState extends State<MyHomePage> {
               controller.add(text);
             },
           ),
-          SafeArea(
+          SizedBox(
+            height: kToolbarHeight,
+            child: AppBar(
+              title: const Text('Focused Area OCR Flutter'),
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+          ),
+          Container(
+            margin: EdgeInsets.only(top: statusBarHeight + kToolbarHeight),
             child: StreamBuilder<String>(
               stream: controller.stream,
               builder: (BuildContext context, AsyncSnapshot<String> snapshot) {

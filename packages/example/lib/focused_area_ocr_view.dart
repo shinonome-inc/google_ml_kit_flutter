@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 import 'camera_util.dart';
-import 'script_dropdown_button.dart';
 import 'text_detector_painter.dart';
 
 class FocusedAreaOCRView extends StatefulWidget {
@@ -173,18 +172,9 @@ class _FocusedAreaOCRViewState extends State<FocusedAreaOCRView> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        CameraPreview(
-          _controller!,
-          child: _customPaint,
-        ),
-        if (widget.showDropdown)
-          ScriptDropdownButton(
-            onChanged: (script) => _onChangedScript,
-            script: _script,
-          ),
-      ],
+    return CameraPreview(
+      _controller!,
+      child: _customPaint,
     );
   }
 }
