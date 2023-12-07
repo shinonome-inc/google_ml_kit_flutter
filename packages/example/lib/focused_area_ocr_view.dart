@@ -57,14 +57,6 @@ class _FocusedAreaOCRViewState extends State<FocusedAreaOCRView> {
   CameraController? _controller;
   int _cameraIndex = -1;
 
-  void _onChangedScript(TextRecognitionScript script) {
-    setState(() {
-      _script = script;
-      _textRecognizer.close();
-      _textRecognizer = TextRecognizer(script: _script);
-    });
-  }
-
   Future<void> _processImage(InputImage inputImage) async {
     if (!_canProcess) return;
     if (_isBusy) return;
