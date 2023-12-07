@@ -34,6 +34,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final StreamController<String> controller = StreamController<String>();
+  final double _textViewHeight = 80.0;
 
   @override
   Widget build(BuildContext context) {
@@ -47,25 +48,31 @@ class _MyHomePageState extends State<MyHomePage> {
               controller.add(text);
             },
           ),
-          SizedBox(
-            height: kToolbarHeight,
-            child: AppBar(
-              title: const Text('Focused Area OCR Flutter'),
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.only(top: statusBarHeight + kToolbarHeight),
-            child: StreamBuilder<String>(
-              stream: controller.stream,
-              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-                return Text(
-                  snapshot.data != null ? snapshot.data! : '',
-                  style: const TextStyle(color: Colors.white),
-                );
-              },
-            ),
+          Column(
+            children: [
+              SizedBox(height: statusBarHeight),
+              AppBar(
+                title: const Text('Focused Area OCR Flutter'),
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                width: double.infinity,
+                height: _textViewHeight,
+                color: Colors.black,
+                child: StreamBuilder<String>(
+                  stream: controller.stream,
+                  builder:
+                      (BuildContext context, AsyncSnapshot<String> snapshot) {
+                    return Text(
+                      snapshot.data != null ? snapshot.data! : '',
+                      style: const TextStyle(color: Colors.white),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),
