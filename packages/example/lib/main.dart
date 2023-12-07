@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'text_detector_view.dart';
+import 'focused_area_ocr_view.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,28 +34,53 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final StreamController<String> controller = StreamController<String>();
+  final double _textViewHeight = 80.0;
 
   @override
   Widget build(BuildContext context) {
+    final double statusBarHeight = MediaQuery.of(context).viewPadding.top;
+    final Offset focusedAreaCenter = Offset(
+      0,
+      (statusBarHeight + kToolbarHeight + _textViewHeight) / 2,
+    );
+
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
-          TextRecognizerView(
+          FocusedAreaOCRView(
             onScanText: (text) {
               controller.add(text);
             },
-            showDropdown: false,
+            focusedAreaCenter: focusedAreaCenter,
           ),
-          SafeArea(
-            child: StreamBuilder<String>(
-              stream: controller.stream,
-              builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-                return Text(
-                  snapshot.data != null ? snapshot.data! : '',
-                  style: const TextStyle(color: Colors.white),
-                );
-              },
-            ),
+          Column(
+            children: [
+              SizedBox(
+                height: statusBarHeight + kToolbarHeight,
+                child: AppBar(
+                  title: const Text('Focused Area OCR Flutter'),
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                width: double.infinity,
+                height: _textViewHeight,
+                color: Colors.black,
+                child: StreamBuilder<String>(
+                  stream: controller.stream,
+                  builder:
+                      (BuildContext context, AsyncSnapshot<String> snapshot) {
+                    return Text(
+                      snapshot.data != null ? snapshot.data! : '',
+                      style: const TextStyle(color: Colors.white),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),

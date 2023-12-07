@@ -2,8 +2,9 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
+
+import 'camera_util.dart';
 
 class CameraView extends StatefulWidget {
   const CameraView({
@@ -32,50 +33,7 @@ class _CameraViewState extends State<CameraView> {
   CameraController? _controller;
   int _cameraIndex = -1;
 
-  @override
-  void initState() {
-    super.initState();
-
-    _initialize();
-  }
-
-  void _initialize() async {
-    if (_cameras.isEmpty) {
-      _cameras = await availableCameras();
-    }
-    for (var i = 0; i < _cameras.length; i++) {
-      if (_cameras[i].lensDirection == widget.initialCameraLensDirection) {
-        _cameraIndex = i;
-        break;
-      }
-    }
-    if (_cameraIndex != -1) {
-      _startLiveFeed();
-    }
-  }
-
-  @override
-  void dispose() {
-    _stopLiveFeed();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(body: _liveFeedBody());
-  }
-
-  Widget _liveFeedBody() {
-    if (_cameras.isEmpty) return Container();
-    if (_controller == null) return Container();
-    if (_controller?.value.isInitialized == false) return Container();
-    return CameraPreview(
-      _controller!,
-      child: widget.customPaint,
-    );
-  }
-
-  Future _startLiveFeed() async {
+  Future<void> _startLiveFeed() async {
     final camera = _cameras[_cameraIndex];
     _controller = CameraController(
       camera,
@@ -102,80 +60,60 @@ class _CameraViewState extends State<CameraView> {
     });
   }
 
-  Future _stopLiveFeed() async {
+  Future<void> _stopLiveFeed() async {
     await _controller?.stopImageStream();
     await _controller?.dispose();
     _controller = null;
   }
 
   void _processCameraImage(CameraImage image) {
-    final inputImage = _inputImageFromCameraImage(image);
+    final inputImage = CameraUtil.inputImageFromCameraImage(
+      image: image,
+      controller: _controller,
+      cameras: _cameras,
+      cameraIndex: _cameraIndex,
+    );
     if (inputImage == null) return;
     widget.onImage(inputImage);
   }
 
-  final _orientations = {
-    DeviceOrientation.portraitUp: 0,
-    DeviceOrientation.landscapeLeft: 90,
-    DeviceOrientation.portraitDown: 180,
-    DeviceOrientation.landscapeRight: 270,
-  };
-
-  InputImage? _inputImageFromCameraImage(CameraImage image) {
-    if (_controller == null) return null;
-
-    // get image rotation
-    // it is used in android to convert the InputImage from Dart to Java: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/android/src/main/java/com/google_mlkit_commons/InputImageConverter.java
-    // `rotation` is not used in iOS to convert the InputImage from Dart to Obj-C: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/google_mlkit_commons/ios/Classes/MLKVisionImage%2BFlutterPlugin.m
-    // in both platforms `rotation` and `camera.lensDirection` can be used to compensate `x` and `y` coordinates on a canvas: https://github.com/flutter-ml/google_ml_kit_flutter/blob/master/packages/example/lib/vision_detector_views/painters/coordinates_translator.dart
-    final camera = _cameras[_cameraIndex];
-    final sensorOrientation = camera.sensorOrientation;
-    // print(
-    //     'lensDirection: ${camera.lensDirection}, sensorOrientation: $sensorOrientation, ${_controller?.value.deviceOrientation} ${_controller?.value.lockedCaptureOrientation} ${_controller?.value.isCaptureOrientationLocked}');
-    InputImageRotation? rotation;
-    if (Platform.isIOS) {
-      rotation = InputImageRotationValue.fromRawValue(sensorOrientation);
-    } else if (Platform.isAndroid) {
-      var rotationCompensation =
-          _orientations[_controller!.value.deviceOrientation];
-      if (rotationCompensation == null) return null;
-      if (camera.lensDirection == CameraLensDirection.front) {
-        // front-facing
-        rotationCompensation = (sensorOrientation + rotationCompensation) % 360;
-      } else {
-        // back-facing
-        rotationCompensation =
-            (sensorOrientation - rotationCompensation + 360) % 360;
-      }
-      rotation = InputImageRotationValue.fromRawValue(rotationCompensation);
-      // print('rotationCompensation: $rotationCompensation');
+  Future<void> _initialize() async {
+    if (_cameras.isEmpty) {
+      _cameras = await availableCameras();
     }
-    if (rotation == null) return null;
-    // print('final rotation: $rotation');
+    for (var i = 0; i < _cameras.length; i++) {
+      if (_cameras[i].lensDirection == widget.initialCameraLensDirection) {
+        _cameraIndex = i;
+        break;
+      }
+    }
+    if (_cameraIndex != -1) {
+      _startLiveFeed();
+    }
+  }
 
-    // get image format
-    final format = InputImageFormatValue.fromRawValue(image.format.raw);
-    // validate format depending on platform
-    // only supported formats:
-    // * nv21 for Android
-    // * bgra8888 for iOS
-    if (format == null ||
-        (Platform.isAndroid && format != InputImageFormat.nv21) ||
-        (Platform.isIOS && format != InputImageFormat.bgra8888)) return null;
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
 
-    // since format is constraint to nv21 or bgra8888, both only have one plane
-    if (image.planes.length != 1) return null;
-    final plane = image.planes.first;
+  @override
+  void dispose() {
+    _stopLiveFeed();
+    super.dispose();
+  }
 
-    // compose InputImage using bytes
-    return InputImage.fromBytes(
-      bytes: plane.bytes,
-      metadata: InputImageMetadata(
-        size: Size(image.width.toDouble(), image.height.toDouble()),
-        rotation: rotation, // used only in Android
-        format: format, // used only in iOS
-        bytesPerRow: plane.bytesPerRow, // used only in iOS
-      ),
+  @override
+  Widget build(BuildContext context) {
+    if (_cameras.isEmpty) return const SizedBox.shrink();
+    if (_controller == null) return const SizedBox.shrink();
+    if (_controller?.value.isInitialized == false) {
+      return const SizedBox.shrink();
+    }
+    return CameraPreview(
+      _controller!,
+      child: widget.customPaint,
     );
   }
 }
