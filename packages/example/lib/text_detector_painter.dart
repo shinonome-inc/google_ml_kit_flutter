@@ -77,7 +77,7 @@ class TextRecognizerPainter extends CustomPainter {
         Path()..addRRect(focusedRRect),
       ),
       unfocusedAreaPaint ?? Paint()
-        ..color = Color(0x99000000),
+        ..color = const Color(0x99000000),
     );
   }
 
@@ -89,7 +89,7 @@ class TextRecognizerPainter extends CustomPainter {
       paintTextStyle ??
           ui.TextStyle(
             color: Colors.lightGreenAccent,
-            background: Paint()..color = Color(0x99000000),
+            background: Paint()..color = const Color(0x99000000),
           ),
     );
     builder.addText(textBlock.text);
