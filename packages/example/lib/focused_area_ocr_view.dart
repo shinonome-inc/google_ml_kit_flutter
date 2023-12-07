@@ -13,6 +13,7 @@ class FocusedAreaOCRView extends StatefulWidget {
     Key? key,
     this.focusedAreaWidth = 200.0,
     this.focusedAreaHeight = 40.0,
+    this.focusedAreaCenter = Offset.zero,
     this.focusedAreaRadius = const Radius.circular(8.0),
     this.focusedAreaPaint,
     this.unfocusedAreaPaint,
@@ -28,6 +29,7 @@ class FocusedAreaOCRView extends StatefulWidget {
 
   final double? focusedAreaWidth;
   final double? focusedAreaHeight;
+  final Offset? focusedAreaCenter;
   final Radius? focusedAreaRadius;
   final Paint? focusedAreaPaint;
   final Paint? unfocusedAreaPaint;
@@ -77,6 +79,7 @@ class _FocusedAreaOCRViewState extends State<FocusedAreaOCRView> {
         cameraLensDirection: _cameraLensDirection,
         focusedAreaWidth: widget.focusedAreaWidth!,
         focusedAreaHeight: widget.focusedAreaHeight!,
+        focusedAreaCenter: widget.focusedAreaCenter!,
         focusedAreaRadius: widget.focusedAreaRadius!,
         focusedAreaPaint: widget.focusedAreaPaint,
         unfocusedAreaPaint: widget.unfocusedAreaPaint,
@@ -172,6 +175,11 @@ class _FocusedAreaOCRViewState extends State<FocusedAreaOCRView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_cameras.isEmpty) return const SizedBox.shrink();
+    if (_controller == null) return const SizedBox.shrink();
+    if (_controller?.value.isInitialized == false) {
+      return const SizedBox.shrink();
+    }
     return CameraPreview(
       _controller!,
       child: _customPaint,

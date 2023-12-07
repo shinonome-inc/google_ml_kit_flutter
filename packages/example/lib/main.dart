@@ -39,6 +39,11 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final double statusBarHeight = MediaQuery.of(context).viewPadding.top;
+    final Offset focusedAreaCenter = Offset(
+      0,
+      (statusBarHeight + kToolbarHeight + _textViewHeight) / 2,
+    );
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -47,14 +52,17 @@ class _MyHomePageState extends State<MyHomePage> {
             onScanText: (text) {
               controller.add(text);
             },
+            focusedAreaCenter: focusedAreaCenter,
           ),
           Column(
             children: [
-              SizedBox(height: statusBarHeight),
-              AppBar(
-                title: const Text('Focused Area OCR Flutter'),
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
+              SizedBox(
+                height: statusBarHeight + kToolbarHeight,
+                child: AppBar(
+                  title: const Text('Focused Area OCR Flutter'),
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.all(16.0),

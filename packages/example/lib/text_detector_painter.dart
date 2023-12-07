@@ -15,6 +15,7 @@ class TextRecognizerPainter extends CustomPainter {
     required this.cameraLensDirection,
     required this.focusedAreaWidth,
     required this.focusedAreaHeight,
+    required this.focusedAreaCenter,
     required this.focusedAreaRadius,
     this.focusedAreaPaint,
     this.unfocusedAreaPaint,
@@ -29,6 +30,7 @@ class TextRecognizerPainter extends CustomPainter {
   final CameraLensDirection cameraLensDirection;
   final double focusedAreaWidth;
   final double focusedAreaHeight;
+  final Offset focusedAreaCenter;
   final Radius focusedAreaRadius;
   final Paint? focusedAreaPaint;
   final Paint? unfocusedAreaPaint;
@@ -65,8 +67,9 @@ class TextRecognizerPainter extends CustomPainter {
 
   /// draw unfocused area
   void _drawUnfocusedArea(Canvas canvas, Size size, RRect focusedRRect) {
+    final Offset deviceCenter = Offset(size.width / 2, size.height / 2);
     final Rect deviceRect = Rect.fromCenter(
-      center: Offset(size.width / 2, size.height / 2),
+      center: deviceCenter,
       width: size.width,
       height: size.height,
     );
@@ -136,10 +139,12 @@ class TextRecognizerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final RRect focusedRRect = RRect.fromLTRBR(
-      (size.width - focusedAreaWidth) / 2,
-      (size.height - focusedAreaHeight) / 2,
-      (size.width - focusedAreaWidth) / 2 + focusedAreaWidth,
-      (size.height - focusedAreaHeight) / 2 + focusedAreaHeight,
+      ((size.width - focusedAreaWidth) / 2) + focusedAreaCenter.dx,
+      ((size.height - focusedAreaHeight) / 2) + focusedAreaCenter.dy,
+      ((size.width - focusedAreaWidth) / 2 + focusedAreaWidth) +
+          focusedAreaCenter.dx,
+      ((size.height - focusedAreaHeight) / 2 + focusedAreaHeight) +
+          focusedAreaCenter.dy,
       focusedAreaRadius,
     );
 
