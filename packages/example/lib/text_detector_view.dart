@@ -1,10 +1,11 @@
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
-import 'camera_view.dart';
+import 'camera_util.dart';
 import 'script_dropdown_button.dart';
 import 'text_detector_painter.dart';
 
@@ -21,6 +22,9 @@ class TextRecognizerView extends StatefulWidget {
     required this.onScanText,
     this.script = TextRecognitionScript.latin,
     this.showDropdown = true,
+    this.onCameraFeedReady,
+    this.onDetectorViewModeChanged,
+    this.onCameraLensDirectionChanged,
   }) : super(key: key);
 
   final double? focusedAreaWidth;
@@ -33,6 +37,9 @@ class TextRecognizerView extends StatefulWidget {
   final Function? onScanText;
   final TextRecognitionScript script;
   final bool showDropdown;
+  final VoidCallback? onCameraFeedReady;
+  final VoidCallback? onDetectorViewModeChanged;
+  final Function(CameraLensDirection direction)? onCameraLensDirectionChanged;
 
   @override
   State<TextRecognizerView> createState() => _TextRecognizerViewState();
@@ -44,7 +51,10 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
   bool _canProcess = true;
   bool _isBusy = false;
   CustomPaint? _customPaint;
-  CameraLensDirection _cameraLensDirection = CameraLensDirection.back;
+  final CameraLensDirection _cameraLensDirection = CameraLensDirection.back;
+  static List<CameraDescription> _cameras = [];
+  CameraController? _controller;
+  int _cameraIndex = -1;
 
   void _onChangedScript(TextRecognitionScript script) {
     setState(() {
@@ -54,40 +64,31 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     });
   }
 
-  @override
-  void initState() {
-    _script = widget.script;
-    _textRecognizer = TextRecognizer(script: _script);
-    super.initState();
-  }
-
-  @override
-  void dispose() async {
-    _canProcess = false;
-    _textRecognizer.close();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          CameraView(
-            customPaint: _customPaint,
-            onImage: _processImage,
-            initialCameraLensDirection: _cameraLensDirection,
-            onCameraLensDirectionChanged: (value) =>
-                _cameraLensDirection = value,
-          ),
-          if (widget.showDropdown)
-            ScriptDropdownButton(
-              onChanged: (script) => _onChangedScript,
-              script: _script,
-            ),
-        ],
-      ),
+  Future _startLiveFeed() async {
+    final camera = _cameras[_cameraIndex];
+    _controller = CameraController(
+      camera,
+      // Set to ResolutionPreset.high. Do NOT set it to ResolutionPreset.max because for some phones does NOT work.
+      ResolutionPreset.high,
+      enableAudio: false,
+      imageFormatGroup: Platform.isAndroid
+          ? ImageFormatGroup.nv21
+          : ImageFormatGroup.bgra8888,
     );
+    _controller?.initialize().then((_) {
+      if (!mounted) {
+        return;
+      }
+      _controller?.startImageStream(_processCameraImage).then((value) {
+        if (widget.onCameraFeedReady != null) {
+          widget.onCameraFeedReady!();
+        }
+        if (widget.onCameraLensDirectionChanged != null) {
+          widget.onCameraLensDirectionChanged!(camera.lensDirection);
+        }
+      });
+      setState(() {});
+    });
   }
 
   Future<void> _processImage(InputImage inputImage) async {
@@ -120,5 +121,82 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     if (mounted) {
       setState(() {});
     }
+  }
+
+  Future _stopLiveFeed() async {
+    await _controller?.stopImageStream();
+    await _controller?.dispose();
+    _controller = null;
+  }
+
+  void _processCameraImage(CameraImage image) {
+    final inputImage = CameraUtil.inputImageFromCameraImage(
+      image: image,
+      controller: _controller,
+      cameras: _cameras,
+      cameraIndex: _cameraIndex,
+    );
+    if (inputImage == null) return;
+    _processImage(inputImage);
+  }
+
+  void _initialize() async {
+    if (_cameras.isEmpty) {
+      _cameras = await availableCameras();
+    }
+    for (var i = 0; i < _cameras.length; i++) {
+      if (_cameras[i].lensDirection == _cameraLensDirection) {
+        _cameraIndex = i;
+        break;
+      }
+    }
+    if (_cameraIndex != -1) {
+      _startLiveFeed();
+    }
+  }
+
+  @override
+  void initState() {
+    _script = widget.script;
+    _textRecognizer = TextRecognizer(script: _script);
+    _initialize();
+    super.initState();
+  }
+
+  @override
+  void dispose() async {
+    _canProcess = false;
+    _textRecognizer.close();
+    _stopLiveFeed();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_cameras.isEmpty) return Container();
+    if (_controller == null) return Container();
+    if (_controller?.value.isInitialized == false) return Container();
+    return Scaffold(
+      body: Stack(
+        children: [
+          // CameraView(
+          //   customPaint: _customPaint,
+          //   onImage: _processImage,
+          //   initialCameraLensDirection: _cameraLensDirection,
+          //   onCameraLensDirectionChanged: (value) =>
+          //       _cameraLensDirection = value,
+          // ),
+          CameraPreview(
+            _controller!,
+            child: _customPaint,
+          ),
+          if (widget.showDropdown)
+            ScriptDropdownButton(
+              onChanged: (script) => _onChangedScript,
+              script: _script,
+            ),
+        ],
+      ),
+    );
   }
 }
