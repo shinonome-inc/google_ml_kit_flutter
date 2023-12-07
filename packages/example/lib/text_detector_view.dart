@@ -54,42 +54,6 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     });
   }
 
-  @override
-  void initState() {
-    _script = widget.script;
-    _textRecognizer = TextRecognizer(script: _script);
-    super.initState();
-  }
-
-  @override
-  void dispose() async {
-    _canProcess = false;
-    _textRecognizer.close();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          CameraView(
-            customPaint: _customPaint,
-            onImage: _processImage,
-            initialCameraLensDirection: _cameraLensDirection,
-            onCameraLensDirectionChanged: (value) =>
-                _cameraLensDirection = value,
-          ),
-          if (widget.showDropdown)
-            ScriptDropdownButton(
-              onChanged: (script) => _onChangedScript,
-              script: _script,
-            ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _processImage(InputImage inputImage) async {
     if (!_canProcess) return;
     if (_isBusy) return;
@@ -120,5 +84,38 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
     if (mounted) {
       setState(() {});
     }
+  }
+
+  @override
+  void initState() {
+    _script = widget.script;
+    _textRecognizer = TextRecognizer(script: _script);
+    super.initState();
+  }
+
+  @override
+  void dispose() async {
+    _canProcess = false;
+    _textRecognizer.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        CameraView(
+          customPaint: _customPaint,
+          onImage: _processImage,
+          initialCameraLensDirection: _cameraLensDirection,
+          onCameraLensDirectionChanged: (value) => _cameraLensDirection = value,
+        ),
+        if (widget.showDropdown)
+          ScriptDropdownButton(
+            onChanged: (script) => _onChangedScript,
+            script: _script,
+          ),
+      ],
+    );
   }
 }

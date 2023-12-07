@@ -33,50 +33,7 @@ class _CameraViewState extends State<CameraView> {
   CameraController? _controller;
   int _cameraIndex = -1;
 
-  @override
-  void initState() {
-    super.initState();
-
-    _initialize();
-  }
-
-  void _initialize() async {
-    if (_cameras.isEmpty) {
-      _cameras = await availableCameras();
-    }
-    for (var i = 0; i < _cameras.length; i++) {
-      if (_cameras[i].lensDirection == widget.initialCameraLensDirection) {
-        _cameraIndex = i;
-        break;
-      }
-    }
-    if (_cameraIndex != -1) {
-      _startLiveFeed();
-    }
-  }
-
-  @override
-  void dispose() {
-    _stopLiveFeed();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(body: _liveFeedBody());
-  }
-
-  Widget _liveFeedBody() {
-    if (_cameras.isEmpty) return Container();
-    if (_controller == null) return Container();
-    if (_controller?.value.isInitialized == false) return Container();
-    return CameraPreview(
-      _controller!,
-      child: widget.customPaint,
-    );
-  }
-
-  Future _startLiveFeed() async {
+  Future<void> _startLiveFeed() async {
     final camera = _cameras[_cameraIndex];
     _controller = CameraController(
       camera,
@@ -103,7 +60,7 @@ class _CameraViewState extends State<CameraView> {
     });
   }
 
-  Future _stopLiveFeed() async {
+  Future<void> _stopLiveFeed() async {
     await _controller?.stopImageStream();
     await _controller?.dispose();
     _controller = null;
@@ -118,5 +75,45 @@ class _CameraViewState extends State<CameraView> {
     );
     if (inputImage == null) return;
     widget.onImage(inputImage);
+  }
+
+  Future<void> _initialize() async {
+    if (_cameras.isEmpty) {
+      _cameras = await availableCameras();
+    }
+    for (var i = 0; i < _cameras.length; i++) {
+      if (_cameras[i].lensDirection == widget.initialCameraLensDirection) {
+        _cameraIndex = i;
+        break;
+      }
+    }
+    if (_cameraIndex != -1) {
+      _startLiveFeed();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
+
+  @override
+  void dispose() {
+    _stopLiveFeed();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_cameras.isEmpty) return const SizedBox.shrink();
+    if (_controller == null) return const SizedBox.shrink();
+    if (_controller?.value.isInitialized == false) {
+      return const SizedBox.shrink();
+    }
+    return CameraPreview(
+      _controller!,
+      child: widget.customPaint,
+    );
   }
 }
