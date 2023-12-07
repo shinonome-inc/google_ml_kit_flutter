@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 import 'camera_view.dart';
+import 'script_dropdown_button.dart';
 import 'text_detector_painter.dart';
 
 class TextRecognizerView extends StatefulWidget {
@@ -45,6 +46,14 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
   CustomPaint? _customPaint;
   CameraLensDirection _cameraLensDirection = CameraLensDirection.back;
 
+  void _onChangedScript(TextRecognitionScript script) {
+    setState(() {
+      _script = script;
+      _textRecognizer.close();
+      _textRecognizer = TextRecognizer(script: _script);
+    });
+  }
+
   @override
   void initState() {
     _script = widget.script;
@@ -72,58 +81,12 @@ class _TextRecognizerViewState extends State<TextRecognizerView> {
                 _cameraLensDirection = value,
           ),
           if (widget.showDropdown)
-            Positioned(
-              top: 30,
-              left: 100,
-              right: 100,
-              child: Row(
-                children: [
-                  const Spacer(),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(4.0),
-                      child: _buildDropdown(),
-                    ),
-                  ),
-                  const Spacer(),
-                ],
-              ),
+            ScriptDropdownButton(
+              onChanged: (script) => _onChangedScript,
+              script: _script,
             ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDropdown() {
-    return DropdownButton<TextRecognitionScript>(
-      value: _script,
-      icon: const Icon(Icons.arrow_downward),
-      elevation: 16,
-      style: const TextStyle(color: Colors.blue),
-      underline: Container(
-        height: 2,
-        color: Colors.blue,
-      ),
-      onChanged: (TextRecognitionScript? script) {
-        if (script != null) {
-          setState(() {
-            _script = script;
-            _textRecognizer.close();
-            _textRecognizer = TextRecognizer(script: _script);
-          });
-        }
-      },
-      items: TextRecognitionScript.values
-          .map<DropdownMenuItem<TextRecognitionScript>>((script) {
-        return DropdownMenuItem<TextRecognitionScript>(
-          value: script,
-          child: Text(script.name),
-        );
-      }).toList(),
     );
   }
 

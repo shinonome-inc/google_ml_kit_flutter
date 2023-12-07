@@ -44,7 +44,6 @@ class _MyHomePageState extends State<MyHomePage> {
             onScanText: (text) {
               controller.add(text);
             },
-            showDropdown: false,
           ),
           SafeArea(
             child: StreamBuilder<String>(
