@@ -7,8 +7,8 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 
 import 'coordinates_translator.dart';
 
-class TextRecognizerPainter extends CustomPainter {
-  TextRecognizerPainter({
+class FocusedAreaOCRPainter extends CustomPainter {
+  FocusedAreaOCRPainter({
     required this.recognizedText,
     required this.imageSize,
     required this.rotation,
@@ -194,7 +194,7 @@ class TextRecognizerPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(TextRecognizerPainter oldDelegate) {
+  bool shouldRepaint(FocusedAreaOCRPainter oldDelegate) {
     return oldDelegate.recognizedText != recognizedText;
   }
 }

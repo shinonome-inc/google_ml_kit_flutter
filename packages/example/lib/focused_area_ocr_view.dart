@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 import 'camera_util.dart';
-import 'text_detector_painter.dart';
+import 'focused_area_ocr_painter.dart';
 
 class FocusedAreaOCRView extends StatefulWidget {
   const FocusedAreaOCRView({
@@ -64,7 +64,7 @@ class _FocusedAreaOCRViewState extends State<FocusedAreaOCRView> {
     final recognizedText = await _textRecognizer.processImage(inputImage);
     if (inputImage.metadata?.size != null &&
         inputImage.metadata?.rotation != null) {
-      final painter = TextRecognizerPainter(
+      final painter = FocusedAreaOCRPainter(
         recognizedText: recognizedText,
         imageSize: inputImage.metadata!.size,
         rotation: inputImage.metadata!.rotation,
