@@ -76,7 +76,7 @@ class _FocusedAreaOCRViewState extends State<FocusedAreaOCRView> {
         focusedAreaPaint: widget.focusedAreaPaint,
         unfocusedAreaPaint: widget.unfocusedAreaPaint,
         textBackgroundPaint: widget.textBackgroundPaint,
-        paintTextStyle: widget.paintTextStyle,
+        uiTextStyle: widget.paintTextStyle,
         onScanText: widget.onScanText,
       );
       _customPaint = CustomPaint(painter: painter);

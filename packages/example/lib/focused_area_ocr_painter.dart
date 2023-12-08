@@ -20,7 +20,7 @@ class FocusedAreaOCRPainter extends CustomPainter {
     this.focusedAreaPaint,
     this.unfocusedAreaPaint,
     this.textBackgroundPaint,
-    this.paintTextStyle,
+    this.uiTextStyle,
     this.onScanText,
   });
 
@@ -35,7 +35,7 @@ class FocusedAreaOCRPainter extends CustomPainter {
   final Paint? focusedAreaPaint;
   final Paint? unfocusedAreaPaint;
   final Paint? textBackgroundPaint;
-  final ui.TextStyle? paintTextStyle;
+  final ui.TextStyle? uiTextStyle;
   final Function? onScanText;
 
   bool hasPointInRange(RRect focusedRRect, Rect textRect) {
@@ -56,12 +56,13 @@ class FocusedAreaOCRPainter extends CustomPainter {
 
   /// Draw focused area
   void _drawFocusedArea(Canvas canvas, RRect focusedRRect) {
+    final Paint defaultPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..color = Colors.blue;
     canvas.drawRRect(
       focusedRRect,
-      focusedAreaPaint ?? Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0
-        ..color = Colors.blue,
+      focusedAreaPaint == null ? defaultPaint : focusedAreaPaint!,
     );
   }
 
@@ -73,28 +74,26 @@ class FocusedAreaOCRPainter extends CustomPainter {
       width: size.width,
       height: size.height,
     );
+    final Paint defaultPaint = Paint()..color = const Color(0x99000000);
     canvas.drawPath(
       Path.combine(
         PathOperation.difference,
         Path()..addRect(deviceRect),
         Path()..addRRect(focusedRRect),
       ),
-      unfocusedAreaPaint ?? Paint()
-        ..color = const Color(0x99000000),
+      unfocusedAreaPaint == null ? defaultPaint : unfocusedAreaPaint!,
     );
   }
 
   void _drawText(Canvas canvas, TextBlock textBlock, Rect textRect) {
+    final ui.TextStyle defaultStyle = ui.TextStyle(
+      color: Colors.lightGreenAccent,
+      background: Paint()..color = const Color(0x99000000),
+    );
     final ParagraphBuilder builder = ParagraphBuilder(
       ParagraphStyle(),
     );
-    builder.pushStyle(
-      paintTextStyle ??
-          ui.TextStyle(
-            color: Colors.lightGreenAccent,
-            background: Paint()..color = const Color(0x99000000),
-          ),
-    );
+    builder.pushStyle(uiTextStyle == null ? defaultStyle : uiTextStyle!);
     builder.addText(textBlock.text);
     builder.pop();
     canvas.drawParagraph(
@@ -126,13 +125,14 @@ class FocusedAreaOCRPainter extends CustomPainter {
       cornerPoints.add(Offset(x, y));
     }
     cornerPoints.add(cornerPoints.first);
+    final Paint defaultPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..color = Colors.lightGreenAccent;
     canvas.drawPoints(
       PointMode.polygon,
       cornerPoints,
-      textBackgroundPaint ?? Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0
-        ..color = Colors.lightGreenAccent,
+      textBackgroundPaint == null ? defaultPaint : textBackgroundPaint!,
     );
   }
 
